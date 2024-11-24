@@ -1,9 +1,4 @@
-const express = require('express');
-const cors = require('cors');
 const axios = require('axios');
-
-const app = express();
-app.use(cors());
 
 // Enhanced configuration mapping services to their relevant stops
 const config = {
@@ -35,7 +30,18 @@ const config = {
     }
 };
 
-async function fetchBusArrivals(req, res) {
+export default async function handler(req, res) {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    
+    // Handle OPTIONS request
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
     try {
         const uniqueStops = new Set(
             Object.values(config.serviceStops).flat()
@@ -68,11 +74,9 @@ async function fetchBusArrivals(req, res) {
             });
         });
 
-        return res.json({ Services: allServices });
+        return res.status(200).json({ Services: allServices });
     } catch (error) {
         console.error('Error:', error.response?.data || error.message);
         return res.status(500).json({ error: 'Failed to fetch bus timings' });
     }
 }
-
-module.exports = fetchBusArrivals;
