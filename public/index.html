@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bus Arrivals</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: monospace;
+            margin: 20px;
+        }
+        pre {
+            white-space: pre;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <pre id="output">             Bus             Stop   Next   After
+  ------------------------- ------ ------ -------
+   Loading bus timings...</pre>
+
+    <script>
+        async function fetchBusArrivals() {
+            try {
+                const response = await fetch('/api/bus-arrivals');
+                const data = await response.json();
+                displayBusArrivals(data.Services);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('output').textContent = 'Error fetching bus timings';
+            }
+        }
+
+        function displayBusArrivals(services) {
+            let output = '             Bus             Stop   Next   After\n';
+            output += '  ------------------------- ------ ------ -------\n';
+            
+            if (services && services.length > 0) {
+                services.sort((a, b) => {
+                    if (a.ServiceNo < b.ServiceNo) return -1;
+                    if (a.ServiceNo > b.ServiceNo) return 1;
+                    return 0;
+                });
+
+                services.forEach(service => {
+                    const next = service.NextBus?.EstimatedArrival ? 
+                        new Date(service.NextBus.EstimatedArrival) : null;
+                    const after = service.NextBus2?.EstimatedArrival ? 
+                        new Date(service.NextBus2.EstimatedArrival) : null;
+                    
+                    const nextMin = next ? Math.max(0, Math.floor((next - new Date()) / 60000)) : '--';
+                    const afterMin = after ? Math.max(0, Math.floor((after - new Date()) / 60000)) : '--';
+                    
+                    output += `   ${service.ServiceNo.padEnd(3)} ${service.BusStopName.padEnd(17)} ${String(nextMin).padStart(6)} ${String(afterMin).padStart(7)}\n`;
+                });
+            } else {
+                output += '   No services available\n';
+            }
+            
+            document.getElementById('output').textContent = output;
+        }
+
+        // Initial fetch
+        fetchBusArrivals();
+
+        // Refresh every 30 seconds
+        setInterval(fetchBusArrivals, 30000);
+    </script>
+</body>
+</html>
