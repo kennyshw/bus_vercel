@@ -1,4 +1,4 @@
-const config = {
+const busConfig = {
     serviceStops: {
         '243W': ['27399'],
         '258': ['27399'],
@@ -47,7 +47,7 @@ export default async function handler(request) {
 
     try {
         const uniqueStops = new Set(
-            Object.values(config.serviceStops).flat()
+            Object.values(busConfig.serviceStops).flat()
         );
 
         const promises = Array.from(uniqueStops).map(stopCode => 
@@ -67,11 +67,11 @@ export default async function handler(request) {
             const services = response.Services || [];
             
             services.forEach(service => {
-                const relevantStops = config.serviceStops[service.ServiceNo];
+                const relevantStops = busConfig.serviceStops[service.ServiceNo];
                 if (relevantStops && relevantStops.includes(stopCode)) {
                     allServices.push({
                         ...service,
-                        BusStopName: config.busStops[stopCode],
+                        BusStopName: busConfig.busStops[stopCode],
                         BusStopCode: stopCode
                     });
                 }
