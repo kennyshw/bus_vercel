@@ -1,5 +1,4 @@
-const axios = require('axios');
-require('dotenv').config();
+import axios from 'axios';
 
 const config = {
     serviceStops: {
@@ -30,9 +29,16 @@ const config = {
     }
 };
 
-export default async function handler(req, res) {
-    if (req.method !== 'GET') {
-        return res.status(405).json({ error: 'Method not allowed' });
+export const config = {
+    runtime: 'edge',
+};
+
+export default async function handler(request) {
+    if (request.method !== 'GET') {
+        return new Response(
+            JSON.stringify({ error: 'Method not allowed' }),
+            { status: 405, headers: { 'Content-Type': 'application/json' } }
+        );
     }
 
     try {
@@ -67,9 +73,15 @@ export default async function handler(req, res) {
             });
         });
 
-        return res.status(200).json({ Services: allServices });
+        return new Response(
+            JSON.stringify({ Services: allServices }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
     } catch (error) {
-        console.error('Error:', error.response?.data || error.message);
-        return res.status(500).json({ error: 'Failed to fetch bus timings' });
+        console.error('Error:', error);
+        return new Response(
+            JSON.stringify({ error: 'Failed to fetch bus timings' }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
     }
 }
