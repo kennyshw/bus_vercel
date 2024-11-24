@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 const config = {
     serviceStops: {
         '243W': ['27399'],
@@ -30,14 +28,20 @@ const config = {
 };
 
 export const config = {
-    runtime: 'edge',
+    runtime: 'edge'
 };
 
 export default async function handler(request) {
     if (request.method !== 'GET') {
         return new Response(
             JSON.stringify({ error: 'Method not allowed' }),
-            { status: 405, headers: { 'Content-Type': 'application/json' } }
+            { 
+                status: 405, 
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                } 
+            }
         );
     }
 
@@ -47,11 +51,12 @@ export default async function handler(request) {
         );
 
         const promises = Array.from(uniqueStops).map(stopCode => 
-            axios.get(`https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival?BusStopCode=${stopCode}`, {
+            fetch(`https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival?BusStopCode=${stopCode}`, {
                 headers: {
-                    'AccountKey': process.env.LTA_API_KEY
+                    'AccountKey': process.env.LTA_API_KEY,
+                    'Accept': 'application/json'
                 }
-            })
+            }).then(res => res.json())
         );
 
         const responses = await Promise.all(promises);
@@ -59,7 +64,7 @@ export default async function handler(request) {
         const allServices = [];
         responses.forEach((response, index) => {
             const stopCode = Array.from(uniqueStops)[index];
-            const services = response.data.Services || [];
+            const services = response.Services || [];
             
             services.forEach(service => {
                 const relevantStops = config.serviceStops[service.ServiceNo];
@@ -75,13 +80,25 @@ export default async function handler(request) {
 
         return new Response(
             JSON.stringify({ Services: allServices }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
+            { 
+                status: 200, 
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                } 
+            }
         );
     } catch (error) {
         console.error('Error:', error);
         return new Response(
             JSON.stringify({ error: 'Failed to fetch bus timings' }),
-            { status: 500, headers: { 'Content-Type': 'application/json' } }
+            { 
+                status: 500, 
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                } 
+            }
         );
     }
 }
