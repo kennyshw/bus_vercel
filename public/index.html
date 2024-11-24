@@ -12,6 +12,9 @@
             white-space: pre;
             overflow-x: auto;
         }
+        .error {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -23,11 +26,17 @@
         async function fetchBusArrivals() {
             try {
                 const response = await fetch('/api/bus-arrivals');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
                 displayBusArrivals(data.Services);
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('output').textContent = 'Error fetching bus timings';
+                document.getElementById('output').innerHTML = `<span class="error">Error fetching bus timings: ${error.message}</span>\nRetrying in 30 seconds...`;
             }
         }
 
